@@ -342,24 +342,6 @@ if(variables.serviceWeb) {
             }
         }
 
-        // --- E-Mail-Domain als Default-Name nur wenn aktiviert ---
-        let voucherNote = req.body['voucher-note'] !== '' ? req.body['voucher-note'] : null;
-        if (
-            variables.pinOidcUserToOwnDomain &&
-            !voucherNote &&
-            req.oidc
-        ) {
-            try {
-                const user = await req.oidc.fetchUserInfo();
-                if (user && user.email && user.email.includes('@')) {
-                    voucherNote = user.email.split('@')[1];
-                }
-            } catch (e) {
-                // Fehler ignorieren, falls Userinfo nicht geladen werden kann
-            }
-        }
-        // --- ENDE ---
-
         // --- Description und Domain kombinieren, wenn aktiviert ---
         let voucherNote = null;
         if (variables.pinOidcUserToOwnDomain && req.oidc) {
