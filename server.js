@@ -647,7 +647,8 @@ if(variables.serviceWeb) {
                 status: req.query.status,
                 quota: req.query.quota
             },
-            sort: req.query.sort
+            sort: req.query.sort,
+            pinOidcUserToOwnDomain: variables.pinOidcUserToOwnDomain
         });
     });
     app.get('/voucher/:id', [authorization.web], async (req, res) => {
