@@ -360,6 +360,27 @@ if(variables.serviceWeb) {
         }
         // --- ENDE ---
 
+        // --- Description und Domain kombinieren, wenn aktiviert ---
+        let voucherNote = null;
+        if (variables.pinOidcUserToOwnDomain && req.oidc) {
+            try {
+                const user = await req.oidc.fetchUserInfo();
+                if (user && user.email && user.email.includes('@')) {
+                    const domain = user.email.split('@')[1];
+                    if (req.body['voucher-note'] && req.body['voucher-note'] !== '') {
+                        voucherNote = `${req.body['voucher-note']}|||${domain}`;
+                    } else {
+                        voucherNote = domain;
+                    }
+                }
+            } catch (e) {
+                // Fehler ignorieren, falls Userinfo nicht geladen werden kann
+            }
+        } else {
+            voucherNote = req.body['voucher-note'] !== '' ? req.body['voucher-note'] : null;
+        }
+        // --- ENDE ---
+
         // Create voucher code
         const voucherCode = await unifi.create(
             types(
