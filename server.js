@@ -342,9 +342,13 @@ if(variables.serviceWeb) {
             }
         }
 
-        // --- NEU: E-Mail-Domain als Default-Name setzen ---
+        // --- E-Mail-Domain als Default-Name nur wenn aktiviert ---
         let voucherNote = req.body['voucher-note'] !== '' ? req.body['voucher-note'] : null;
-        if (!voucherNote && req.oidc) {
+        if (
+            variables.pinOidcUserToOwnDomain &&
+            !voucherNote &&
+            req.oidc
+        ) {
             try {
                 const user = await req.oidc.fetchUserInfo();
                 if (user && user.email && user.email.includes('@')) {
@@ -354,7 +358,7 @@ if(variables.serviceWeb) {
                 // Fehler ignorieren, falls Userinfo nicht geladen werden kann
             }
         }
-        // --- ENDE NEU ---
+        // --- ENDE ---
 
         // Create voucher code
         const voucherCode = await unifi.create(
