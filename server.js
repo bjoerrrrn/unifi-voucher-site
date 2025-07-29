@@ -566,6 +566,19 @@ if(variables.serviceWeb) {
 
         const user = req.oidc ? await req.oidc.fetchUserInfo() : { email: 'admin' };
 
+        // --- NEU: Filter nach Domain, wenn aktiviert ---
+        let filteredVouchers = cache.vouchers;
+        if (
+            variables.pinOidcUserToOwnDomain &&
+            req.oidc &&
+            user.email &&
+            user.email.includes('@')
+        ) {
+            const userDomain = user.email.split('@')[1];
+            filteredVouchers = filteredVouchers.filter(v => (v.note || '').toLowerCase() === userDomain.toLowerCase());
+        }
+        // --- ENDE NEU ---
+
         res.render('voucher', {
             baseUrl: req.headers['x-ingress-path'] ? req.headers['x-ingress-path'] : '',
             gitTag: variables.gitTag,
@@ -584,7 +597,7 @@ if(variables.serviceWeb) {
             printer_enabled: variables.printers !== '',
             voucher_types: types(variables.voucherTypes),
             voucher_custom: variables.voucherCustom,
-            vouchers: cache.vouchers.filter((item) => {
+            vouchers: filteredVouchers.filter((item) => {
                 if(req.query.status === 'available') {
                     return item.used === 0 && item.status !== 'EXPIRED';
                 }
