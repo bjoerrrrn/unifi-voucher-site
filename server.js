@@ -342,8 +342,31 @@ if(variables.serviceWeb) {
             }
         }
 
+        // --- NEU: E-Mail-Domain als Default-Name setzen ---
+        let voucherNote = req.body['voucher-note'] !== '' ? req.body['voucher-note'] : null;
+        if (!voucherNote && req.oidc) {
+            try {
+                const user = await req.oidc.fetchUserInfo();
+                if (user && user.email && user.email.includes('@')) {
+                    voucherNote = user.email.split('@')[1];
+                }
+            } catch (e) {
+                // Fehler ignorieren, falls Userinfo nicht geladen werden kann
+            }
+        }
+        // --- ENDE NEU ---
+
         // Create voucher code
-        const voucherCode = await unifi.create(types(req.body['voucher-type'] === 'custom' ? `${req.body['voucher-duration-type'] === 'day' ? (parseInt(req.body['voucher-duration']) * 24 * 60) : req.body['voucher-duration-type'] === 'hour' ? (parseInt(req.body['voucher-duration']) * 60) : parseInt(req.body['voucher-duration'])},${req.body['voucher-usage'] === '-1' ? req.body['voucher-quota'] : req.body['voucher-usage']},${req.body['voucher-upload-limit']},${req.body['voucher-download-limit']},${req.body['voucher-data-limit']};` : req.body['voucher-type'], true), parseInt(req.body['voucher-amount']), req.body['voucher-note'] !== '' ? req.body['voucher-note'] : null).catch((e) => {
+        const voucherCode = await unifi.create(
+            types(
+                req.body['voucher-type'] === 'custom'
+                    ? `${req.body['voucher-duration-type'] === 'day' ? (parseInt(req.body['voucher-duration']) * 24 * 60) : req.body['voucher-duration-type'] === 'hour' ? (parseInt(req.body['voucher-duration']) * 60) : parseInt(req.body['voucher-duration'])},${req.body['voucher-usage'] === '-1' ? req.body['voucher-quota'] : req.body['voucher-usage']},${req.body['voucher-upload-limit']},${req.body['voucher-download-limit']},${req.body['voucher-data-limit']};`
+                    : req.body['voucher-type'],
+                true
+            ),
+            parseInt(req.body['voucher-amount']),
+            voucherNote
+        ).catch((e) => {
             res.cookie('flashMessage', JSON.stringify({type: 'error', message: e}), {httpOnly: true, expires: new Date(Date.now() + 24 * 60 * 60 * 1000)}).redirect(302, `${req.headers['x-ingress-path'] ? req.headers['x-ingress-path'] : ''}/vouchers`);
         });
 
