@@ -581,8 +581,15 @@ if(variables.serviceWeb) {
             user.email &&
             user.email.includes('@')
         ) {
-            const userDomain = user.email.split('@')[1];
-            filteredVouchers = filteredVouchers.filter(v => (v.note || '').toLowerCase() === userDomain.toLowerCase());
+            const userDomain = user.email.split('@')[1].toLowerCase();
+            filteredVouchers = filteredVouchers.filter(v => {
+                const note = (v.note || '').toLowerCase();
+                if (note.includes('|||')) {
+                    return note.split('|||')[1] === userDomain;
+                } else {
+                    return note === userDomain;
+                }
+            });
         }
         // --- ENDE NEU ---
 
