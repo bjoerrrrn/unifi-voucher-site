@@ -1,4 +1,4 @@
-# When the workflow succeeds the package will be published to docker hub
+# When the workflow succeeds the package will be published to GHCR
 
 name: Publish Docker Image
 
@@ -19,11 +19,16 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Login to DockerHub
+
+      # GHCR Login
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      # Build and push (tagged release)
       - name: Build and push
         if: startsWith(github.ref, 'refs/tags/')
         uses: docker/build-push-action@v5
@@ -31,9 +36,12 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: glenndehaan/unifi-voucher-site:${{ github.ref_name }}
+          tags: |
+            ghcr.io/${{ secrets.GHCR_USERNAME }}/unifi-voucher-site:${{ github.ref_name }}
           build-args: |
             GIT_TAG=${{ github.ref_name }}
+
+      # Build and push (latest)
       - name: Build and push (latest)
         if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v5
@@ -41,6 +49,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: glenndehaan/unifi-voucher-site:latest
+          tags: |
+            ghcr.io/${{ secrets.GHCR_USERNAME }}/unifi-voucher-site:latest
           build-args: |
             GIT_TAG=master
