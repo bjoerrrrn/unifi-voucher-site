@@ -52,6 +52,12 @@ module.exports = {
             // Create new translator
             const t = translation('email', language);
 
+            // Logo-URL bestimmen
+            const logoUrl = process.env.EMAIL_LOGO_URL || 'https://github.com/glenndehaan/unifi-voucher-site/blob/master/public/images/icon/logo_192x192.png?raw=true';
+
+            // QR-Code als Buffer erzeugen
+            const qrBuffer = await qr(voucher.code, true); // true: Buffer statt Data-URL
+
             // Attempt to send mail via SMTP transport
             const result = await transport.sendMail({
                 from: variables.smtpFrom,
@@ -64,10 +70,17 @@ module.exports = {
                     voucher,
                     unifiSsid: variables.unifiSsid,
                     unifiSsidPassword: variables.unifiSsidPassword,
-                    qr: await qr(),
+                    logoUrl,
                     timeConvert: time,
                     bytesConvert: bytes
-                })
+                }),
+                attachments: [
+                    {
+                        filename: 'qr.png',
+                        content: qrBuffer,
+                        cid: 'qr-code'
+                    }
+                ]
             }).catch((e) => {
                 log.error(`[Mail] Error when sending mail`);
                 log.error(e);
